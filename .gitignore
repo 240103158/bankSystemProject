@@ -34,13 +34,10 @@ build/
 
 ### Docker and credentials ###
 .dockerignore
-docker-compose.override.yml
-docker-compose.*.yml
-!docker-compose.yml
 .docker/
 *.env
 .env
 .env.*
-.compose.yml
+compose.yaml
 **/application.properties
 *.md
