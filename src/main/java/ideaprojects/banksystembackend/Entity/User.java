@@ -7,9 +7,11 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -36,12 +38,17 @@ public class User {
     @OneToOne(mappedBy = "user")
     private Account account;
 
+    @OneToMany(mappedBy = "owner")
+    private List<Card> cards;
 
-    public User(String name, String email, String password, UserRole role) {
+
+    public User(String name, String email, UserRole role, String password, Account account, List<Card> cards) {
         this.name = name;
         this.email = email;
-        this.password = password;
         this.role = role;
+        this.password = password;
+        this.account = account;
+        this.cards = cards;
     }
 
     public User() {
@@ -105,5 +112,23 @@ public class User {
 
     public void setRole(UserRole role) {
         this.role = role;
+    }
+
+    public List<Card> getCards() {
+        return cards;
+    }
+
+    public void setCards(List<Card> cards) {
+        this.cards = cards;
+    }
+
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", role=" + role +
+                '}';
     }
 }

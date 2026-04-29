@@ -40,7 +40,7 @@ public class Account {
     @Column(name = "account_status", nullable = false)
     private AccountStatus accountStatus;
 
-    public Account(String accountNumber, double balance, User userId, AccountStatus accountStatus) {
+    public Account(String accountNumber, double balance, User user, AccountStatus accountStatus) {
         this.accountNumber = accountNumber;
         this.balance = balance;
         this.user = user;
@@ -90,5 +90,15 @@ public class Account {
 
     public void setAccountStatus(AccountStatus accountStatus) {
         this.accountStatus = accountStatus;
+    }
+
+    @Override
+    public String toString() {
+        return "Account{" +
+                "accountNumber='" + accountNumber + '\'' +
+                ", balance=" + balance +
+                ", user=" + user +
+                ", accountStatus=" + accountStatus +
+                '}';
     }
 }
