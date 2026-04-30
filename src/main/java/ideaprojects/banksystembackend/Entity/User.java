@@ -1,5 +1,6 @@
 package ideaprojects.banksystembackend.Entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,6 +12,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,8 +24,11 @@ public class User {
     @Column(name = "id", nullable = false)
     private UUID id;
 
-    @Column(name = "name", nullable = false, length = 50)
-    private String name;
+    @Column(name = "first_name", nullable = false, length = 50)
+    private String first_name;
+
+    @Column(name = "last_name", nullable = false, length = 50)
+    private String last_name;
 
     @Column(name = "email", nullable = false, length = 50, unique = true)
     private String email;
@@ -35,79 +40,84 @@ public class User {
     @Column(name = "role", nullable = false)
     private UserRole role;
 
-    @OneToOne(mappedBy = "user")
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Account account;
 
-    @OneToMany(mappedBy = "owner")
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     private List<Card> cards;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    public User(String name, String email, UserRole role, String password, Account account, List<Card> cards) {
-        this.name = name;
-        this.email = email;
-        this.role = role;
-        this.password = password;
-        this.account = account;
-        this.cards = cards;
-    }
+
+
 
     public User() {
     }
 
-    public User(String name, String email, String password, UserRole role, Account account) {
-        this.name = name;
+    public User(String first_name, String last_name, String email, String password, UserRole role, Account account, List<Card> cards, LocalDateTime createdAt) {
+        this.first_name = first_name;
+        this.last_name = last_name;
         this.email = email;
         this.password = password;
         this.role = role;
         this.account = account;
+        this.cards = cards;
+        this.createdAt = createdAt;
     }
 
-
-    // getter and setter
-    public Account getAccount() {
-        return account;
-    }
-
-    public void setAccount(Account account) {
+    public User(String first_name, String last_name, String email, String password, UserRole role, Account account, LocalDateTime createdAt) {
+        this.first_name = first_name;
+        this.last_name = last_name;
+        this.email = email;
+        this.password = password;
+        this.role = role;
         this.account = account;
+        this.createdAt = createdAt;
     }
-
 
     public UUID getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getFirst_name() {
+        return first_name;
+    }
+
+    public void setFirst_name(String first_name) {
+        this.first_name = first_name;
     }
 
     public String getEmail() {
         return email;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public UserRole getRole() {
-        return role;
-    }
-
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public void setEmail(String email) {
         this.email = email;
     }
 
+    public String getLast_name() {
+        return last_name;
+    }
+
+    public void setLast_name(String last_name) {
+        this.last_name = last_name;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public UserRole getRole() {
+        return role;
     }
 
     public void setRole(UserRole role) {
@@ -122,11 +132,26 @@ public class User {
         this.cards = cards;
     }
 
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 
     @Override
     public String toString() {
         return "User{" +
-                "name='" + name + '\'' +
+                "full name='" + first_name + " " + last_name +  '\'' +
                 ", email='" + email + '\'' +
                 ", role=" + role +
                 '}';

@@ -40,6 +40,9 @@ public class Account {
     @Column(name = "account_status", nullable = false)
     private AccountStatus accountStatus;
 
+    @Column(name = "currency", nullable = false)
+    private String currency;
+
     public Account(String accountNumber, double balance, User user, AccountStatus accountStatus) {
         this.accountNumber = accountNumber;
         this.balance = balance;
@@ -92,11 +95,19 @@ public class Account {
         this.accountStatus = accountStatus;
     }
 
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
     @Override
     public String toString() {
         return "Account{" +
                 "accountNumber='" + accountNumber + '\'' +
-                ", balance=" + balance +
+                ", balance=" + balance + " " + currency +
                 ", user=" + user +
                 ", accountStatus=" + accountStatus +
                 '}';
