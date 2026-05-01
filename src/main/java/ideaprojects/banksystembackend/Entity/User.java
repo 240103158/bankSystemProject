@@ -25,10 +25,10 @@ public class User {
     private UUID id;
 
     @Column(name = "first_name", nullable = false, length = 50)
-    private String first_name;
+    private String firstName;
 
     @Column(name = "last_name", nullable = false, length = 50)
-    private String last_name;
+    private String lastName;
 
     @Column(name = "email", nullable = false, length = 50, unique = true)
     private String email;
@@ -55,25 +55,43 @@ public class User {
     public User() {
     }
 
-    public User(String first_name, String last_name, String email, String password, UserRole role, Account account, List<Card> cards, LocalDateTime createdAt) {
-        this.first_name = first_name;
-        this.last_name = last_name;
+    public User(String first_name, String lastName, String email, String password, UserRole role, Account account, List<Card> cards) {
+        this.firstName = first_name;
+        this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.role = role;
         this.account = account;
         this.cards = cards;
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public User(String firstName, String lastName, String email, String password, UserRole role, LocalDateTime createdAt) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
+        this.role = role;
         this.createdAt = createdAt;
     }
 
-    public User(String first_name, String last_name, String email, String password, UserRole role, Account account, LocalDateTime createdAt) {
-        this.first_name = first_name;
-        this.last_name = last_name;
+    public User(String first_name, String lastName, String email, String password, UserRole role, Account account) {
+        this.firstName = first_name;
+        this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.role = role;
         this.account = account;
-        this.createdAt = createdAt;
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public User(String firstName, String lastName, String email, String password) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
+        this.createdAt = LocalDateTime.now();
+        this.role = UserRole.USER_STANDARD; // default role
     }
 
     public UUID getId() {
@@ -84,12 +102,12 @@ public class User {
         this.id = id;
     }
 
-    public String getFirst_name() {
-        return first_name;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setFirst_name(String first_name) {
-        this.first_name = first_name;
+    public void setFirstName(String first_name) {
+        this.firstName = first_name;
     }
 
     public String getEmail() {
@@ -100,12 +118,12 @@ public class User {
         this.email = email;
     }
 
-    public String getLast_name() {
-        return last_name;
+    public String getLastName() {
+        return lastName;
     }
 
-    public void setLast_name(String last_name) {
-        this.last_name = last_name;
+    public void setLastName(String last_name) {
+        this.lastName = last_name;
     }
 
     public String getPassword() {
@@ -151,7 +169,7 @@ public class User {
     @Override
     public String toString() {
         return "User{" +
-                "full name='" + first_name + " " + last_name +  '\'' +
+                "full name='" + firstName + " " + lastName +  '\'' +
                 ", email='" + email + '\'' +
                 ", role=" + role +
                 '}';
