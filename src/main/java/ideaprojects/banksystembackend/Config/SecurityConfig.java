@@ -34,7 +34,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/api/auth/login", "/api/auth/registration").permitAll()
+                        .requestMatchers("/", "/api/auth/login", "/api/auth/register").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -48,7 +48,7 @@ public class SecurityConfig {
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/api/")
+                        .logoutSuccessUrl("/?logout")
                         .permitAll()
                 )
                 .build();
