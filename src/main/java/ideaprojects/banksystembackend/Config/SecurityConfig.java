@@ -2,6 +2,7 @@ package ideaprojects.banksystembackend.Config;
 
 import ideaprojects.banksystembackend.Entity.User;
 import ideaprojects.banksystembackend.repository.UserRepository;
+import ideaprojects.banksystembackend.service.OAuth2UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +28,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, OAuth2UserService oAuth2UserService) throws Exception {
         return httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session
@@ -45,6 +46,13 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/api/accounts", true)
                         .failureUrl("/api/auth/login?error=true")
                         .permitAll()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/api/auth/login")
+                        .defaultSuccessUrl("/api/accounts", true)
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(oAuth2UserService)
+                        )
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
