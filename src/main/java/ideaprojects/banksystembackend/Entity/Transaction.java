@@ -1,5 +1,6 @@
 package ideaprojects.banksystembackend.Entity;
 
+import ideaprojects.banksystembackend.DTO.response.TransactionDTO;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -7,8 +8,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
@@ -35,26 +34,35 @@ public class Transaction {
     @Column(name = "description")
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "account_id", nullable = false)
-    private Account account;
+    @Column(name = "sender_account_id", nullable = false)
+    private UUID senderAccountId;
+
+    @Column(name = "receiving_account_id", nullable = true)
+    private UUID receivingAccountId;
+
+    @Column(name = "currency", nullable = false)
+    private String currency;
 
     public Transaction() {
     }
 
-    public Transaction(UUID id, TransactionType type, double amount, LocalDateTime date, String description) {
-        this.id = id;
-        this.type = type;
-        this.amount = amount;
-        this.date = date;
-        this.description = description;
-    }
 
     public Transaction(TransactionType type, double amount, LocalDateTime date, String description) {
         this.type = type;
         this.amount = amount;
         this.date = date;
         this.description = description;
+    }
+
+
+    public Transaction(TransactionType type, double amount, String currency,LocalDateTime date, String description, UUID account, UUID receivingAccountId) {
+        this.type = type;
+        this.amount = amount;
+        this.currency = currency;
+        this.date = date;
+        this.description = description;
+        this.senderAccountId = account;
+        this.receivingAccountId = receivingAccountId;
     }
 
     public UUID getId() {
@@ -97,12 +105,37 @@ public class Transaction {
         this.description = description;
     }
 
-    public Account getAccount() {
-        return account;
+    public UUID getSenderAccountId() {
+        return senderAccountId;
     }
 
-    public void setAccount(Account account) {
-        this.account = account;
+    public void setSenderAccountId(UUID account) {
+        this.senderAccountId = account;
+    }
+
+    public UUID getReceivingAccountId() {
+        return receivingAccountId;
+    }
+
+    public void setReceivingAccountId(UUID receivingAccountId) {
+        this.receivingAccountId = receivingAccountId;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public TransactionDTO toDto() {
+        return new TransactionDTO(
+                amount,
+                date.toString(),
+                description,
+                type.name()
+        );
     }
 
     @Override
@@ -111,6 +144,7 @@ public class Transaction {
                 "id=" + id +
                 ", type=" + type +
                 ", amount=" + amount +
+                "currency='" + currency + '\'' +
                 ", date=" + date +
                 ", description='" + description + '\'' +
                 '}';

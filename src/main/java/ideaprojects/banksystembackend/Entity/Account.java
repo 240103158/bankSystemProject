@@ -1,10 +1,12 @@
 package ideaprojects.banksystembackend.Entity;
 
+import ideaprojects.banksystembackend.DTO.response.AccountDTO;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -24,7 +26,7 @@ import java.util.UUID;
 @Table(name = "accounts")
 public class Account {
     @Id
-    @GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
     private UUID id;
 
@@ -42,9 +44,6 @@ public class Account {
     @Column(name = "account_status", nullable = false)
     private AccountStatus accountStatus;
 
-    @OneToMany(mappedBy = "account", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
-    private List<Transaction> transactions;
-
     @Column(name = "currency", nullable = false)
     private String currency;
 
@@ -54,6 +53,7 @@ public class Account {
         this.user = user;
         this.accountStatus = accountStatus;
     }
+
 
     public Account() {
     }
@@ -100,20 +100,22 @@ public class Account {
         this.accountStatus = accountStatus;
     }
 
-    public List<Transaction> getTransactions() {
-        return transactions;
-    }
-
-    public void setTransactions(List<Transaction> transactions) {
-        this.transactions = transactions;
-    }
-
     public String getCurrency() {
         return currency;
     }
 
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+
+    public AccountDTO toDto() {
+        return new AccountDTO(
+                accountNumber,
+                currency,
+                balance,
+                accountStatus.name(),
+                user.getFullName()
+        );
     }
 
     @Override

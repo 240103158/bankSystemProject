@@ -49,12 +49,20 @@
                 </svg>
                 Transactions
             </a>
-            <a href="#" class="nav-item">
+            <a th:href="@{/api/transfer}" class="nav-item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
                     <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
                 </svg>
                 Transfer
+            </a>
+            <a th:href="@{/api/test}" class="nav-item"
+               sec:authorize="hasAuthority('ROLE_ADMIN_ROLE')"
+               style="border-top:1px solid var(--border);margin-top:8px;padding-top:18px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+                </svg>
+                API Console
             </a>
         </nav>
 

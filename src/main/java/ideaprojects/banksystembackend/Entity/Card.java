@@ -1,5 +1,6 @@
 package ideaprojects.banksystembackend.Entity;
 
+import ideaprojects.banksystembackend.DTO.response.CardDTO;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -95,6 +96,15 @@ public class Card {
 
     public void setOwner(User owner) {
         this.owner = owner;
+    }
+
+    public CardDTO toDto() {
+        return new CardDTO(
+                "**** **** **** " + cardNumber.substring(12),
+                cardType.name(),
+                cardExpectDate,
+                "***"
+        );
     }
 
     @Override

@@ -8,6 +8,8 @@ import ideaprojects.banksystembackend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -17,17 +19,21 @@ import java.util.UUID;
 @Slf4j
 public class UserService {
     private final UserRepository userRepository;
+    private final AccountService accountService;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, AccountService accountService) {
         this.userRepository = userRepository;
+        this.accountService = accountService;
     }
 
     public  String register(User user){
         if(userRepository.findByEmail(user.getEmail()).isPresent()){
             return "User with email " + user.getEmail() + " already exists";
         }
+
         userRepository.save(user);
+        accountService.createAccount(user, "USD");
         return "User registered successfully";
     }
 
@@ -69,6 +75,13 @@ public class UserService {
         userRepository.save(user);
         return "User role updated successfully to " + role;
 
+    }
+
+    public User getCurrentUser(){
+        String email = SecurityContextHolder.getContext().getAuthentication().getName(); // todo give me current user information with Spring Boot helping
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User this email: " + email + " not found" ));
     }
 
 }

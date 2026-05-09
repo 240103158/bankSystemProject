@@ -1,5 +1,6 @@
 package ideaprojects.banksystembackend.Entity;
 
+import ideaprojects.banksystembackend.DTO.response.UserDTO;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -164,6 +165,14 @@ public class User {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+
+    public UserDTO toDto() {
+        return new UserDTO(id, email, firstName, lastName);
     }
 
     @Override

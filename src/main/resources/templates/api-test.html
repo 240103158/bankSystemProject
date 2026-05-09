@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>API Test Console — BankSystem</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <style>
+        .console-layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+        .endpoint-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 18px;
+        }
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            user-select: none;
+        }
+        .endpoint-header:hover { background: var(--surface2); }
+        .method-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 6px;
+            font-family: monospace;
+            letter-spacing: .5px;
+        }
+        .method-get  { background: rgba(62,207,142,.15); color: #3ecf8e; }
+        .method-post { background: rgba(79,142,247,.15); color: #4f8ef7; }
+        .endpoint-path { font-family: monospace; font-size: 13px; color: var(--text); }
+        .endpoint-desc { margin-left: auto; font-size: 12px; color: var(--text-muted); }
+        .endpoint-arrow { margin-left: 8px; color: var(--text-muted); font-size: 12px; transition: transform .2s; }
+        .endpoint-arrow.open { transform: rotate(90deg); }
+
+        .endpoint-body { padding: 20px; display: none; }
+        .endpoint-body.visible { display: block; }
+
+        .field-group { margin-bottom: 14px; }
+        .field-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 5px;
+        }
+        .field-input {
+            width: 100%;
+            padding: 9px 12px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 13px;
+            font-family: monospace;
+            outline: none;
+            transition: border-color .2s;
+        }
+        .field-input:focus { border-color: var(--primary); }
+        .field-input::placeholder { color: var(--text-muted); }
+
+        .inline-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .three-cols    { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+        .send-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 20px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, transform .1s;
+        }
+        .send-btn:hover { background: var(--primary-hover); }
+        .send-btn:active { transform: scale(.97); }
+
+        .response-box {
+            margin-top: 16px;
+            background: #0c0e16;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            display: none;
+        }
+        .response-box.visible { display: block; }
+        .response-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+        }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .status-ok   { background: var(--success); }
+        .status-err  { background: var(--danger); }
+        .response-pre {
+            padding: 14px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #a8d8a8;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 320px;
+            overflow-y: auto;
+            line-height: 1.7;
+        }
+
+        .sticky-uid {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .sticky-uid label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            white-space: nowrap;
+        }
+        .sticky-uid input {
+            flex: 1;
+            padding: 8px 12px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: monospace;
+            font-size: 13px;
+            outline: none;
+            transition: border-color .2s;
+        }
+        .sticky-uid input:focus { border-color: var(--primary); }
+        .uid-hint { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            padding-left: 2px;
+        }
+    </style>
+</head>
+<body>
+<div class="console-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4f8ef7" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                <path d="M16 7V5a2 2 0 0 0-4 0v2"/>
+            </svg>
+            <span>BankSystem</span>
+        </div>
+
+        <nav>
+            <a th:href="@{/api/accounts}" class="nav-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                Dashboard
+            </a>
+            <a th:href="@{/api/test}" class="nav-item active">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+                </svg>
+                API Console
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="user-info" style="margin-bottom:14px">
+                <div class="avatar" th:text="${#strings.substring(#authentication.name, 0, 1).toUpperCase()}">U</div>
+                <div>
+                    <div class="user-name" th:text="${#authentication.name}">user@example.com</div>
+                    <div class="user-role">Standard User</div>
+                </div>
+            </div>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-ghost btn-sm" style="width:100%">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Sign out
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">API Console</h1>
+            <p class="page-subtitle">Test all backend endpoints directly from the browser</p>
+        </div>
+
+        <!-- Shared Account Number -->
+        <div class="sticky-uid">
+            <label for="globalAccountNumber">Account Number</label>
+            <input type="text" id="globalAccountNumber" placeholder="e.g. 1234567890"/>
+            <span class="uid-hint">Used by all endpoints below</span>
+        </div>
+
+        <!-- ── ACCOUNT SECTION ─────────────────────────────── -->
+        <div class="section-label">Account Endpoints</div>
+
+        <!-- GET /api/accounts/me -->
+        <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggle('ep-get-account')">
+                <span class="method-badge method-get">GET</span>
+                <span class="endpoint-path">/api/accounts/me</span>
+                <span class="endpoint-desc">Get account by user ID</span>
+                <span class="endpoint-arrow" id="arrow-ep-get-account">▶</span>
+            </div>
+            <div class="endpoint-body" id="ep-get-account">
+                <div class="field-group">
+                    <label class="field-label">User ID (UUID) — auto-filled from above</label>
+                    <input class="field-input" id="getAccUserId" placeholder="uses global account number if empty"/>
+                </div>
+                <button class="send-btn" onclick="getAccount()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    Send
+                </button>
+                <div class="response-box" id="res-get-account">
+                    <div class="response-status">
+                        <span class="status-dot" id="dot-get-account"></span>
+                        <span id="status-get-account">—</span>
+                    </div>
+                    <pre class="response-pre" id="body-get-account"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- POST /api/accounts/deposit -->
+        <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggle('ep-deposit')">
+                <span class="method-badge method-post">POST</span>
+                <span class="endpoint-path">/api/accounts/deposit</span>
+                <span class="endpoint-desc">Deposit money into account</span>
+                <span class="endpoint-arrow" id="arrow-ep-deposit">▶</span>
+            </div>
+            <div class="endpoint-body" id="ep-deposit">
+                <div class="inline-fields">
+                    <div class="field-group">
+                        <label class="field-label">Account Number</label>
+                        <input class="field-input" id="depositUserId" placeholder="uses global account number if empty"/>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Amount</label>
+                        <input class="field-input" id="depositAmount" type="number" min="0.01" step="0.01" placeholder="e.g. 500.00"/>
+                    </div>
+                </div>
+                <button class="send-btn" onclick="deposit()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    Send
+                </button>
+                <div class="response-box" id="res-deposit">
+                    <div class="response-status">
+                        <span class="status-dot" id="dot-deposit"></span>
+                        <span id="status-deposit">—</span>
+                    </div>
+                    <pre class="response-pre" id="body-deposit"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- POST /api/accounts/withdraw -->
+        <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggle('ep-withdraw')">
+                <span class="method-badge method-post">POST</span>
+                <span class="endpoint-path">/api/accounts/withdraw</span>
+                <span class="endpoint-desc">Withdraw money from account</span>
+                <span class="endpoint-arrow" id="arrow-ep-withdraw">▶</span>
+            </div>
+            <div class="endpoint-body" id="ep-withdraw">
+                <div class="inline-fields">
+                    <div class="field-group">
+                        <label class="field-label">Account Number</label>
+                        <input class="field-input" id="withdrawUserId" placeholder="uses global account number if empty"/>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Amount</label>
+                        <input class="field-input" id="withdrawAmount" type="number" min="0.01" step="0.01" placeholder="e.g. 200.00"/>
+                    </div>
+                </div>
+                <button class="send-btn" onclick="withdraw()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    Send
+                </button>
+                <div class="response-box" id="res-withdraw">
+                    <div class="response-status">
+                        <span class="status-dot" id="dot-withdraw"></span>
+                        <span id="status-withdraw">—</span>
+                    </div>
+                    <pre class="response-pre" id="body-withdraw"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- POST /api/accounts/transfer -->
+        <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggle('ep-transfer')">
+                <span class="method-badge method-post">POST</span>
+                <span class="endpoint-path">/api/accounts/transfer</span>
+                <span class="endpoint-desc">Transfer between two accounts</span>
+                <span class="endpoint-arrow" id="arrow-ep-transfer">▶</span>
+            </div>
+            <div class="endpoint-body" id="ep-transfer">
+                <div class="inline-fields" style="margin-bottom:0">
+                    <div class="field-group">
+                        <label class="field-label">Sender Account Number</label>
+                        <input class="field-input" id="transferSender" placeholder="uses global account number if empty"/>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Receiver Account Number</label>
+                        <input class="field-input" id="transferReceiver" placeholder="e.g. 9876543210"/>
+                    </div>
+                </div>
+                <div class="three-cols" style="margin-top:12px">
+                    <div class="field-group">
+                        <label class="field-label">Amount</label>
+                        <input class="field-input" id="transferAmount" type="number" min="0.01" step="0.01" placeholder="100.00"/>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Currency</label>
+                        <input class="field-input" id="transferCurrency" placeholder="KZT"/>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Transaction Type</label>
+                        <select class="field-input" id="transferType">
+                            <option value="TRANSFER">TRANSFER</option>
+                            <option value="PAYMENT">PAYMENT</option>
+                            <option value="DEPOSIT">DEPOSIT</option>
+                            <option value="WITHDRAWAL">WITHDRAWAL</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Description</label>
+                    <input class="field-input" id="transferDesc" placeholder="e.g. Rent payment"/>
+                </div>
+                <div style="margin-bottom:14px">
+                    <label class="field-label">Request Body Preview (JSON)</label>
+                    <pre class="field-input" id="transferPreview" style="min-height:80px;padding:12px;color:#a8d8a8;font-size:12px;cursor:default"></pre>
+                </div>
+                <button class="send-btn" onclick="transfer()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    Send
+                </button>
+                <div class="response-box" id="res-transfer">
+                    <div class="response-status">
+                        <span class="status-dot" id="dot-transfer"></span>
+                        <span id="status-transfer">—</span>
+                    </div>
+                    <pre class="response-pre" id="body-transfer"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- GET /api/accounts/transactions -->
+        <div class="endpoint-card">
+            <div class="endpoint-header" onclick="toggle('ep-transactions')">
+                <span class="method-badge method-get">GET</span>
+                <span class="endpoint-path">/api/accounts/transactions</span>
+                <span class="endpoint-desc">Get transaction history</span>
+                <span class="endpoint-arrow" id="arrow-ep-transactions">▶</span>
+            </div>
+            <div class="endpoint-body" id="ep-transactions">
+                <div class="field-group">
+                    <label class="field-label">Account ID (UUID) — auto-filled from above</label>
+                    <input class="field-input" id="txAccountId" placeholder="uses global account number if empty"/>
+                </div>
+                <button class="send-btn" onclick="getTransactions()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    Send
+                </button>
+                <div class="response-box" id="res-transactions">
+                    <div class="response-status">
+                        <span class="status-dot" id="dot-transactions"></span>
+                        <span id="status-transactions">—</span>
+                    </div>
+                    <pre class="response-pre" id="body-transactions"></pre>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    // ── Helpers ────────────────────────────────────────────
+    function uid(localId) {
+        return (document.getElementById(localId).value.trim() ||
+            document.getElementById('globalAccountNumber').value.trim());
+    }
+
+    function showResponse(key, ok, statusText, body) {
+        const box  = document.getElementById('res-' + key);
+        const dot  = document.getElementById('dot-' + key);
+        const stat = document.getElementById('status-' + key);
+        const pre  = document.getElementById('body-' + key);
+
+        box.classList.add('visible');
+        dot.className = 'status-dot ' + (ok ? 'status-ok' : 'status-err');
+        stat.textContent = statusText;
+        pre.style.color  = ok ? '#a8d8a8' : '#f08080';
+
+        try { pre.textContent = JSON.stringify(JSON.parse(body), null, 2); }
+        catch { pre.textContent = body || '(empty response)'; }
+    }
+
+    function toggle(id) {
+        const body  = document.getElementById(id);
+        const arrow = document.getElementById('arrow-' + id);
+        const open  = body.classList.toggle('visible');
+        arrow.classList.toggle('open', open);
+    }
+
+    async function call(method, url, body) {
+        const opts = { method, credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' } };
+        if (body !== undefined) opts.body = JSON.stringify(body);
+        const r = await fetch(url, opts);
+        const text = await r.text();
+        return { ok: r.ok, status: r.status + ' ' + r.statusText, body: text };
+    }
+
+    // ── Endpoint handlers ──────────────────────────────────
+    async function getAccount() {
+        const id = uid('getAccUserId');
+        if (!id) { alert('Please enter a User ID.'); return; }
+        const r = await call('GET', `/api/accounts/me?id=${id}`);
+        showResponse('get-account', r.ok, r.status, r.body);
+    }
+
+    async function deposit() {
+        const accountNumber = uid('depositUserId');
+        const amount        = parseFloat(document.getElementById('depositAmount').value);
+        if (!accountNumber || !amount) { alert('Fill in Account Number and Amount.'); return; }
+        const r = await call('POST', '/api/accounts/deposit', {
+            senderAccountNumber: accountNumber,
+            amount:              amount,
+            transactionType:     'DEPOSIT',
+            currency:            'KZT',
+            description:         'Deposit'
+        });
+        showResponse('deposit', r.ok, r.status, r.body);
+    }
+
+    async function withdraw() {
+        const accountNumber = uid('withdrawUserId');
+        const amount        = parseFloat(document.getElementById('withdrawAmount').value);
+        if (!accountNumber || !amount) { alert('Fill in Account Number and Amount.'); return; }
+        const r = await call('POST', '/api/accounts/withdraw', {
+            senderAccountNumber: accountNumber,
+            amount:              amount,
+            transactionType:     'WITHDRAWAL',
+            currency:            'USD',
+            description:         'Withdrawal'
+        });
+        showResponse('withdraw', r.ok, r.status, r.body);
+    }
+
+    async function transfer() {
+        const senderAccountNumber   = uid('transferSender');
+        const receiverAccountNumber = document.getElementById('transferReceiver').value.trim();
+        const amount                = parseFloat(document.getElementById('transferAmount').value);
+        const currency              = document.getElementById('transferCurrency').value.trim() || 'USD';
+        const description           = document.getElementById('transferDesc').value.trim();
+        const transactionType       = document.getElementById('transferType').value;
+
+        if (!senderAccountNumber || !receiverAccountNumber || !amount) {
+            alert('Fill in Sender Account Number, Receiver Account Number and Amount.'); return;
+        }
+
+        const payload = {
+            senderAccountNumber,
+            receiverAccountNumber,
+            amount,
+            currency,
+            description,
+            transactionType
+        };
+        const r = await call('POST', '/api/accounts/transfer', payload);
+        showResponse('transfer', r.ok, r.status, r.body);
+    }
+
+    async function getTransactions() {
+        const id = uid('txAccountId');
+        if (!id) { alert('Please enter an Account ID.'); return; }
+        const r = await call('GET', `/api/accounts/transactions?accountId=${id}`);
+        showResponse('transactions', r.ok, r.status, r.body);
+    }
+
+    // ── Live preview for transfer body ─────────────────────
+    function updatePreview() {
+        const sender   = uid('transferSender')   || '<senderAccountNumber>';
+        const receiver = document.getElementById('transferReceiver').value.trim() || '<receiverAccountNumber>';
+        const amount   = document.getElementById('transferAmount').value  || 0;
+        const currency = document.getElementById('transferCurrency').value.trim() || 'USD';
+        const desc     = document.getElementById('transferDesc').value.trim() || '';
+        const type     = document.getElementById('transferType').value;
+
+        document.getElementById('transferPreview').textContent = JSON.stringify(
+            {
+                senderAccountNumber:   sender,
+                receiverAccountNumber: receiver,
+                amount: parseFloat(amount) || 0,
+                currency,
+                description: desc,
+                transactionType: type
+            }, null, 2
+        );
+    }
+
+    ['transferSender','transferReceiver','transferAmount','transferCurrency','transferDesc','transferType',
+        'globalAccountNumber'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', updatePreview);
+    });
+
+    updatePreview();
+</script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 package ideaprojects.banksystembackend.service;
 
+import ideaprojects.banksystembackend.Entity.Account;
 import ideaprojects.banksystembackend.Entity.CustomOAuth2User;
 import ideaprojects.banksystembackend.Entity.User;
 import ideaprojects.banksystembackend.Entity.UserRole;
@@ -23,6 +24,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder encoder;
+    private final AccountService accountService;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest request) throws OAuth2AuthenticationException {
@@ -42,8 +44,13 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                     encoder.encode(UUID.randomUUID().toString()),
                     UserRole.USER_STANDARD, LocalDateTime.now());
 
+            accountService.createAccount(newUser, "USD");
             return userRepository.save(newUser);
         });
+
+
+
+
 
         return new CustomOAuth2User(oAuth2User, user);
 

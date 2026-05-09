@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Transfer — BankSystem</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <style>
+        .transfer-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+        .panel-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .panel-body { padding: 24px; }
+
+        .field-group { margin-bottom: 18px; }
+        .field-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            margin-bottom: 6px;
+        }
+        .field-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            transition: border-color .2s;
+        }
+        .field-input:focus { border-color: var(--primary); }
+        .field-input::placeholder { color: var(--text-muted); }
+        .field-input:read-only { opacity: .55; cursor: default; }
+
+        .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+        .sender-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .sender-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        .sender-row { display: flex; justify-content: space-between; align-items: center; }
+        .sender-name { font-size: 15px; font-weight: 600; }
+        .sender-balance { font-size: 20px; font-weight: 700; color: var(--success); }
+        .sender-acc { font-size: 12px; color: var(--text-muted); font-family: monospace; margin-top: 4px; }
+        .sender-currency {
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(79,142,247,.15);
+            color: var(--primary);
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .divider-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 6px 0 18px;
+        }
+        .divider-arrow svg { color: var(--text-muted); }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background .2s, transform .1s;
+            margin-top: 4px;
+        }
+        .submit-btn:hover { background: var(--primary-hover); }
+        .submit-btn:active { transform: scale(.98); }
+        .submit-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .alert-success { background: rgba(62,207,142,.12); border: 1px solid rgba(62,207,142,.3); color: var(--success); }
+        .alert-error   { background: rgba(224,82,82,.12);  border: 1px solid rgba(224,82,82,.3);  color: #f08080; }
+        .alert { display: none; }
+        .alert.visible { display: flex; }
+
+        /* Summary panel */
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-key { color: var(--text-muted); }
+        .summary-val { font-weight: 600; font-family: monospace; font-size: 12px; }
+        .summary-val.big { font-size: 22px; font-family: inherit; color: var(--success); }
+    </style>
+</head>
+<body>
+<div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4f8ef7" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                <path d="M16 7V5a2 2 0 0 0-4 0v2"/>
+            </svg>
+            <span>BankSystem</span>
+        </div>
+
+        <nav>
+            <a th:href="@{/api/accounts}" class="nav-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                Dashboard
+            </a>
+            <a href="#" class="nav-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="5" width="20" height="14" rx="2"/>
+                    <line x1="2" y1="10" x2="22" y2="10"/>
+                </svg>
+                Account
+            </a>
+            <a href="#" class="nav-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+                Cards
+            </a>
+            <a href="#" class="nav-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                    <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                Transactions
+            </a>
+            <a th:href="@{/api/transfer}" class="nav-item active">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+                    <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+                </svg>
+                Transfer
+            </a>
+            <a th:href="@{/api/test}" class="nav-item"
+               sec:authorize="hasAuthority('ROLE_ADMIN_ROLE')"
+               style="border-top:1px solid var(--border);margin-top:8px;padding-top:18px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+                </svg>
+                API Console
+            </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="user-info" style="margin-bottom:14px">
+                <div class="avatar" th:text="${#strings.substring(#authentication.name, 0, 1).toUpperCase()}">U</div>
+                <div>
+                    <div class="user-name" th:text="${#authentication.name}">user@example.com</div>
+                    <div class="user-role">Standard User</div>
+                </div>
+            </div>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-ghost btn-sm" style="width:100%">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Sign out
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">Transfer</h1>
+            <p class="page-subtitle">Send money to another account instantly</p>
+        </div>
+
+        <!-- No account guard -->
+        <div th:if="${account == null}" class="placeholder-box">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p>You don't have an account yet. Please contact support.</p>
+        </div>
+
+        <div th:if="${account != null}" class="transfer-grid">
+
+            <!-- Left: form -->
+            <div class="panel">
+                <div class="panel-header">New Transfer</div>
+                <div class="panel-body">
+
+                    <!-- Sender info -->
+                    <div class="sender-label">From</div>
+                    <div class="sender-card">
+                        <div class="sender-row">
+                            <div>
+                                <div class="sender-name" th:text="${account.user.fullName}">John Doe</div>
+                                <div class="sender-acc" th:text="${account.accountNumber}">1234 5678 9012 3456</div>
+                            </div>
+                            <div style="text-align:right">
+                                <div class="sender-balance" th:text="${account.currency + ' ' + account.balance}">USD 0.00</div>
+                                <div style="margin-top:4px"><span class="sender-currency" th:text="${account.currency}">USD</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divider-arrow">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
+                        </svg>
+                    </div>
+
+                    <!-- Receiver -->
+                    <div class="sender-label">To</div>
+                    <div class="field-group">
+                        <label class="field-label">Receiver Account Number</label>
+                        <input class="field-input" id="receiverAccountNumber"
+                               placeholder="Enter receiver's account number"
+                               oninput="updateSummary()"/>
+                        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Enter the recipient's account number</div>
+                    </div>
+
+                    <!-- Amount + currency -->
+                    <div class="field-row">
+                        <div class="field-group">
+                            <label class="field-label">Amount</label>
+                            <input class="field-input" id="amount" type="number" min="0.01" step="0.01"
+                                   placeholder="0.00" oninput="updateSummary()"/>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label">Currency</label>
+                            <input class="field-input" id="currency" type="text"
+                                   th:value="${account.currency}" oninput="updateSummary()"/>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="field-group">
+                        <label class="field-label">Description <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+                        <input class="field-input" id="description" placeholder="e.g. Rent, invoice #42…"/>
+                    </div>
+
+                    <button class="submit-btn" id="sendBtn" onclick="sendTransfer()">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                        Send Money
+                    </button>
+
+                    <div class="alert alert-success" id="alertSuccess">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span id="successMsg">Transfer completed successfully.</span>
+                    </div>
+                    <div class="alert alert-error" id="alertError">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <span id="errorMsg">Something went wrong.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: summary -->
+            <div>
+                <div class="panel" style="margin-bottom:18px">
+                    <div class="panel-header">Transfer Summary</div>
+                    <div class="panel-body">
+                        <div class="summary-row">
+                            <span class="summary-key">You send</span>
+                            <span class="summary-val big" id="sumAmount">—</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-key">Currency</span>
+                            <span class="summary-val" id="sumCurrency">—</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-key">To</span>
+                            <span class="summary-val" id="sumReceiver" style="max-width:160px;overflow:hidden;text-overflow:ellipsis">—</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-key">Type</span>
+                            <span class="summary-val">TRANSFER</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-key">Balance after</span>
+                            <span class="summary-val" id="sumAfter">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">Tips</div>
+                    <div class="panel-body" style="font-size:13px;color:var(--text-muted);line-height:1.8">
+                        <p style="margin-bottom:8px">• Double-check the receiver's account number before sending.</p>
+                        <p style="margin-bottom:8px">• Transfers are instant and cannot be reversed.</p>
+                        <p>• Make sure your account is active and has sufficient balance.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script th:inline="javascript">
+    /*[- var senderAccountNumber = ''; -]*/
+    const senderAccountNumber = /*[[${account != null ? account.accountNumber : ''}]]*/ '';
+    const balance             = /*[[${account != null ? account.balance : 0}]]*/ 0;
+    const currency            = /*[[${account != null ? account.currency : 'USD'}]]*/ 'USD';
+
+    function updateSummary() {
+        const amt = parseFloat(document.getElementById('amount').value) || 0;
+        const cur = document.getElementById('currency').value.trim() || currency;
+        const rec = document.getElementById('receiverAccountNumber').value.trim();
+
+        document.getElementById('sumAmount').textContent   = amt > 0 ? (cur + ' ' + amt.toFixed(2)) : '—';
+        document.getElementById('sumCurrency').textContent = cur || '—';
+        document.getElementById('sumReceiver').textContent = rec ? (rec.length > 18 ? rec.substring(0, 18) + '…' : rec) : '—';
+
+        const after = balance - amt;
+        const afterEl = document.getElementById('sumAfter');
+        afterEl.textContent = amt > 0 ? (cur + ' ' + after.toFixed(2)) : '—';
+        afterEl.style.color = after < 0 ? 'var(--danger)' : 'var(--success)';
+    }
+
+    async function sendTransfer() {
+        const receiverAccountNumber = document.getElementById('receiverAccountNumber').value.trim();
+        const amount                = parseFloat(document.getElementById('amount').value);
+        const cur                   = document.getElementById('currency').value.trim() || currency;
+        const description           = document.getElementById('description').value.trim();
+
+        hideAlerts();
+
+        if (!receiverAccountNumber) { showError('Please enter the receiver\'s account number.'); return; }
+        if (!amount || amount <= 0)  { showError('Please enter a valid amount greater than 0.'); return; }
+        if (amount > balance)        { showError('Insufficient balance for this transfer.'); return; }
+        if (receiverAccountNumber === senderAccountNumber) { showError('You cannot transfer money to yourself.'); return; }
+
+        const btn = document.getElementById('sendBtn');
+        btn.disabled = true;
+        btn.textContent = 'Sending…';
+
+        try {
+            const resp = await fetch('/api/accounts/transfer', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    senderAccountNumber:   senderAccountNumber,
+                    receiverAccountNumber: receiverAccountNumber,
+                    amount:                amount,
+                    currency:              cur,
+                    description:           description,
+                    transactionType:       'TRANSFER'
+                })
+            });
+
+            if (resp.ok) {
+                showSuccess(`Successfully sent ${cur} ${amount.toFixed(2)}.`);
+                document.getElementById('receiverAccountNumber').value = '';
+                document.getElementById('amount').value                = '';
+                document.getElementById('description').value           = '';
+                updateSummary();
+            } else {
+                const text = await resp.text();
+                showError(text || `Server error: ${resp.status}`);
+            }
+        } catch (e) {
+            showError('Network error. Please try again.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Money`;
+        }
+    }
+
+    function showSuccess(msg) {
+        document.getElementById('successMsg').textContent = msg;
+        document.getElementById('alertSuccess').classList.add('visible');
+    }
+    function showError(msg) {
+        document.getElementById('errorMsg').textContent = msg;
+        document.getElementById('alertError').classList.add('visible');
+    }
+    function hideAlerts() {
+        document.getElementById('alertSuccess').classList.remove('visible');
+        document.getElementById('alertError').classList.remove('visible');
+    }
+</script>
+</body>
+</html>
